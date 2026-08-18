@@ -1,0 +1,118 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="theme-color" content="#f7f9fc" />
+  <title>Prospectos · Seguimiento</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css?v=2" />
+</head>
+<body>
+  <div class="shell">
+    <header class="topbar">
+      <a class="brand" href="#" aria-label="Inicio"><span class="brand-mark">P</span><span>Prospectos</span></a>
+      <nav class="tabs" aria-label="Navegación principal">
+        <button class="tab active" data-view="register">Registrar</button>
+        <button class="tab" data-view="followups">Seguimientos <span id="pendingBadge" class="nav-badge">0</span></button>
+      </nav>
+      <button id="settingsBtn" class="icon-btn" aria-label="Configurar Google Sheets" title="Configurar Google Sheets">⚙</button>
+    </header>
+
+    <main>
+      <section id="registerView" class="view active">
+        <div class="intro">
+          <span class="eyebrow">Nuevo registro</span>
+          <h1>Convierte cada contacto<br>en una oportunidad.</h1>
+          <p>Captura los datos esenciales. El seguimiento comienza desde hoy.</p>
+        </div>
+
+        <form id="leadForm" class="card form-card">
+          <div class="card-head">
+            <div><h2>Datos del prospecto</h2><p>Los campos con * son obligatorios.</p></div>
+            <div class="live-date"><span>HOY</span><strong id="todayLabel"></strong></div>
+          </div>
+
+          <fieldset>
+            <legend>Tipo de programa *</legend>
+            <div class="program-grid">
+              <label class="program-option"><input type="radio" name="program" value="Presencial" checked><span><b>01</b><strong>Presencial</strong><small>En campus</small></span></label>
+              <label class="program-option"><input type="radio" name="program" value="Virtual"><span><b>02</b><strong>Virtual</strong><small>Clases en línea</small></span></label>
+              <label class="program-option"><input type="radio" name="program" value="Licenciamiento"><span><b>03</b><strong>Licenciamiento</strong><small>Acceso digital</small></span></label>
+            </div>
+          </fieldset>
+
+          <div class="form-grid">
+            <label class="field full"><span>Nombre completo *</span><input name="name" autocomplete="name" placeholder="Ej. Ana Sofía Martínez López" required maxlength="120"></label>
+            <label class="field"><span>Número de teléfono *</span><input name="phone" type="tel" autocomplete="tel" inputmode="tel" placeholder="81 1234 5678" required maxlength="25"></label>
+            <label class="field"><span>Correo electrónico *</span><input name="email" type="email" autocomplete="email" placeholder="nombre@correo.com" required maxlength="120"></label>
+            <label class="field"><span>Fecha de contacto</span><input id="contactDate" name="contactDate" type="date" required></label>
+            <label class="field"><span>Próximo contacto <em>Opcional</em></span><input id="nextContact" name="nextContact" type="date"><small>El domingo no se considera día de seguimiento.</small></label>
+            <label class="field"><span>Hora del contacto <em>Opcional</em></span><input id="nextContactTime" name="nextContactTime" type="time" disabled><small>Recibirás un recordatorio cerca de esta hora.</small></label>
+            <label class="field"><span>Medio de contacto <em>Opcional</em></span><select id="contactMethod" name="contactMethod" disabled><option value="">Selecciona una opción</option><option value="Llamada">Llamada</option><option value="WhatsApp">Mensaje por WhatsApp</option></select></label>
+          </div>
+          <div class="form-actions">
+            <p><span class="sync-dot"></span> Los datos se guardan en Google Sheets</p>
+            <button class="primary-btn" type="submit"><span>Registrar prospecto</span><b>→</b></button>
+          </div>
+        </form>
+      </section>
+
+      <section id="followupsView" class="view">
+        <div class="follow-head">
+          <div><span class="eyebrow">Panel de actividad</span><h1>Mis seguimientos</h1><p>Prioriza a quien más necesita tu atención.</p></div>
+          <button id="refreshBtn" class="secondary-btn">↻ Actualizar</button>
+        </div>
+        <div class="stats">
+          <article><span class="stat-dot green"></span><div><strong id="statOnTime">0</strong><small>ON TIME</small></div></article>
+          <article><span class="stat-dot blue"></span><div><strong id="statToday">0</strong><small>HOY</small></div></article>
+          <article><span class="stat-dot yellow"></span><div><strong id="statLate">0</strong><small>3 DÍAS</small></div></article>
+          <article><span class="stat-dot red"></span><div><strong id="statUrgent">0</strong><small>URGENTES</small></div></article>
+        </div>
+        <div class="toolbar">
+          <label class="search"><span>⌕</span><input id="searchInput" type="search" placeholder="Buscar por nombre, teléfono o correo..."></label>
+          <select id="statusFilter" aria-label="Filtrar por estatus"><option value="all">Todos los estatus</option><option value="today">Hoy</option><option value="ontime">ON time</option><option value="late">3 días</option><option value="urgent">Urgente</option></select>
+        </div>
+        <div id="leadList" class="lead-list" aria-live="polite"></div>
+      </section>
+    </main>
+  </div>
+
+  <dialog id="editDialog">
+    <form id="editForm">
+      <button id="editClose" class="dialog-close" type="button" aria-label="Cerrar">×</button>
+      <span class="eyebrow">Corrección de datos</span><h2>Editar prospecto</h2>
+      <p>Corrige la información o cambia el próximo seguimiento. Si modificas la programación, se generará un recordatorio nuevo.</p>
+      <input name="id" type="hidden">
+      <div class="edit-grid">
+        <label class="field"><span>Programa *</span><select name="program" required><option value="Presencial">Presencial</option><option value="Virtual">Virtual</option><option value="Licenciamiento">Licenciamiento</option></select></label>
+        <label class="field"><span>Fecha de contacto inicial *</span><input name="contactDate" type="date" required></label>
+        <label class="field full"><span>Nombre completo *</span><input name="name" autocomplete="name" required maxlength="120"></label>
+        <label class="field"><span>Número de teléfono *</span><input name="phone" type="tel" autocomplete="tel" required maxlength="25"></label>
+        <label class="field"><span>Correo electrónico *</span><input name="email" type="email" autocomplete="email" required maxlength="120"></label>
+        <label class="field"><span>Último contacto *</span><input name="lastContact" type="date" required></label>
+        <label class="field"><span>Próximo contacto <em>Opcional</em></span><input id="editNextContact" name="nextContact" type="date"><small>Si esta fecha vence, el prospecto pasará a urgente.</small></label>
+        <label class="field"><span>Hora <em>Opcional</em></span><input id="editNextContactTime" name="nextContactTime" type="time"></label>
+        <label class="field full"><span>Medio <em>Opcional</em></span><select id="editContactMethod" name="contactMethod"><option value="">Selecciona una opción</option><option value="Llamada">Llamada</option><option value="WhatsApp">Mensaje por WhatsApp</option></select></label>
+      </div>
+      <div class="edit-actions"><button id="editCancel" class="secondary-btn" type="button">Cancelar</button><button class="primary-btn" type="submit">Guardar cambios</button></div>
+    </form>
+  </dialog>
+
+  <dialog id="settingsDialog">
+    <form id="settingsForm" method="dialog">
+      <button class="dialog-close" value="cancel" aria-label="Cerrar">×</button>
+      <span class="eyebrow">Conexión</span><h2>Google Sheets</h2>
+      <p>Pega la URL de la aplicación web que obtendrás al publicar el archivo <code>Code.gs</code>.</p>
+      <label class="field"><span>URL de Apps Script</span><input id="apiUrlInput" type="url" placeholder="https://script.google.com/macros/s/.../exec"></label>
+      <p id="connectionStatus" class="connection-status"></p>
+      <button id="saveSettings" class="primary-btn" value="default">Guardar conexión</button>
+    </form>
+  </dialog>
+  <div id="toast" class="toast" role="status" aria-live="polite"></div>
+  <script src="config.js"></script>
+  <script src="app.js?v=6"></script>
+</body>
+</html>
